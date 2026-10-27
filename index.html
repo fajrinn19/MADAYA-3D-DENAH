@@ -56,7 +56,7 @@ const D=[
 ['Camping Ground',175,34,202,245,.15,'tmn'],['Gazebo 1',400,50,64,77,3.7,'fas'],['Gazebo 2',474,50,65,77,3.7,'fas'],['Gazebo 3',550,50,65,77,3.7,'fas'],
 ['Toilet & Wudhu',26,329,92,128,2.8,'fas'],['Mushallah',276,346,102,111,4,'fas'],['Aula Serbaguna',398,177,190,280,5,'fas'],
 ['Deking',645,60,395,120,.6,'tmn'],['Taman Depan Deking',645,165,330,135,.15,'tmn'],['Depan Cafe',1013,66,290,140,.15,'tmn'],
-['Samping Cafe',1008,203,135,100,3.5,'cafe'],['Cafe',1143,177,160,125,4,'cafe'],['Gudang Cafe',1350,69,150,218,5,'cafe'],
+['Samping Cafe',1008,203,135,100,.7,'cafe'],['Cafe',1143,177,160,125,4,'cafe'],['Gudang Cafe',1350,69,150,218,5,'cafe'],
 ['Green House 1',1533,74,93,211,3.5,'prod'],['Green House 2',1644,74,93,211,3.5,'prod'],['Tanah Kosong',1757,79,168,205,.1,'lhn'],
 ['Rumah Olah',1925,79,225,176,4.5,'prod'],['Pupler',2209,85,74,56,2.5,'prod'],['Kandang',2326,85,70,56,2.5,'prod'],
 ['Gudang Grenbeen',2195,232,258,125,5,'prod'],['Green House 3',1952,317,220,112,3.5,'prod'],['Huller',1978,456,75,47,3,'prod'],
@@ -102,16 +102,19 @@ function deco(n,X,Z,W,D,ht,m){
  }else if(n=='Mushallah'){ // dinding putih, atap seng biru, kusen kayu
   bx(g,W,3,D,0xf4f0e6,0,1.5,0);bx(g,W+.9,.25,D+.9,0xc98a4a,0,3.1,0);hip(g,W,D,3.2,1.6,0x1f4fd8);
   bx(g,W*.7,1.6,.1,0xb86b2a,0,1.7,D/2+.05);bx(g,W*.62,1.4,.12,0x7fa8b8,0,1.7,D/2+.07);
- }else if(n=='Cafe'||n=='Samping Cafe'){ // sesuai foto: dinding putih, atap seng datar + balok kayu tebal, teras depan (menghadap taman) tiang hitam, jendela kayu
+ }else if(n=='Samping Cafe'){ // area terbuka: tanpa atap & tanpa dinding, hanya lantai + pembatas rendah
   const q=new THREE.Group();q.rotation.y=Math.PI;g.add(q);
-  const atap=n!='Samping Cafe',wh=atap?ht-.9:ht,Wr=W+1,Dr=D+2.7,cz=.85,wd=0x5a3a22,wo=0xc98a4a;
+  bx(q,W,.25,D,0xcfc6b0,0,.125,0); // lantai/plesteran
+  bx(q,W-.5,.06,D-.5,0xe3ded0,0,.28,0); // permukaan lantai
+  for(const[w_,d_,x_,z_]of[[W,.18,0,-D/2+.09],[W,.18,0,D/2-.09],[.18,D,-W/2+.09,0],[.18,D,W/2-.09,0]])bx(q,w_,.3,d_,0xb9ae97,x_,.4,z_); // kanstin tepi
+ }else if(n=='Cafe'){ // sesuai foto: dinding putih, atap seng datar + balok kayu tebal, teras depan (menghadap taman) tiang hitam, jendela kayu
+  const q=new THREE.Group();q.rotation.y=Math.PI;g.add(q);
+  const wh=ht-.9,Wr=W+1,Dr=D+2.7,cz=.85,wd=0x5a3a22,wo=0xc98a4a;
   bx(q,W,wh,D,0xf4f0e6,0,wh/2,0);
-  if(atap){
-   bx(q,Wr,.18,Dr,0x9aa3a5,0,wh+.45,cz);
-   for(let x=-Wr/2+.25;x<Wr/2;x+=.5)bx(q,.07,.07,Dr,0xd2d8d9,x,wh+.56,cz);
-   bx(q,Wr,.3,.25,wd,0,wh+.28,cz+Dr/2);bx(q,.25,.3,Dr,wd,Wr/2,wh+.28,cz);bx(q,.25,.3,Dr,wd,-Wr/2,wh+.28,cz);
-   for(const x of[-W/2+.4,W/2-.4])bx(q,.28,wh+.36,.28,0x1a1a1a,x,(wh+.36)/2,D/2+1.8);
-  }else bx(q,W,.2,D,0xcfc6b0,0,wh+.1,0); // tanpa atap: hanya ring balok tepi dinding
+  bx(q,Wr,.18,Dr,0x9aa3a5,0,wh+.45,cz);
+  for(let x=-Wr/2+.25;x<Wr/2;x+=.5)bx(q,.07,.07,Dr,0xd2d8d9,x,wh+.56,cz);
+  bx(q,Wr,.3,.25,wd,0,wh+.28,cz+Dr/2);bx(q,.25,.3,Dr,wd,Wr/2,wh+.28,cz);bx(q,.25,.3,Dr,wd,-Wr/2,wh+.28,cz);
+  for(const x of[-W/2+.4,W/2-.4])bx(q,.28,wh+.36,.28,0x1a1a1a,x,(wh+.36)/2,D/2+1.8);
   bx(q,W+1,.12,2.2,0xcfc6b0,0,.06,D/2+1.1);
   bx(q,W*.55,1.4,.1,wo,-W*.15,1.5,D/2+.05);bx(q,W*.5,1.2,.12,0xf1efe4,-W*.15,1.5,D/2+.07);
   bx(q,.9,2,.1,wo,W*.33,1,D/2+.05);
