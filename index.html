@@ -9,20 +9,41 @@
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif;overflow:hidden}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
-.pn{position:fixed;background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;backdrop-filter:blur(6px)}
+.pn{position:fixed;z-index:2;background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;backdrop-filter:blur(6px)}
 #top{left:10px;top:calc(10px + env(safe-area-inset-top,0px));max-width:260px}
 #top h1{font-size:15px;margin:0 0 6px}
 #top button{margin:2px 2px 0 0;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:transparent;color:var(--tx);cursor:pointer;font-size:12px}
 #lg{left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:12px}
 #lg div{display:flex;align-items:center;gap:6px;margin:2px 0}#lg i{width:12px;height:12px;border-radius:3px;display:inline-block}
 #info{right:10px;top:calc(10px + env(safe-area-inset-top,0px));min-width:150px;font-size:13px}
+/* ===== mode denah 2D (murni gambar teknik, terpisah dari model 3D) ===== */
+#d2{position:fixed;inset:0;z-index:1;background:var(--bg);display:none;touch-action:none}
+#d2.on{display:block}
+#d2 svg{width:100%;height:100%;display:block;cursor:grab}
+#d2 svg.drag{cursor:grabbing}
+#d2 .ar{stroke:#2b332c;stroke-width:.22;vector-effect:non-scaling-stroke}
+#d2 .ar:hover{fill-opacity:.65}
+#d2 text{fill:var(--tx);font:1px system-ui;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+#d2 .dim{stroke:#b4473f;stroke-width:.18;vector-effect:non-scaling-stroke;fill:none}
+#d2 .dimt{fill:#b4473f}
+#d2 .no{fill:#1b2a1f;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:.35px}
+#d2 .gd{stroke:var(--bd);stroke-width:.08;vector-effect:non-scaling-stroke}
+#tbl{right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-height:52vh;max-width:min(320px,52vw);overflow:auto;font-size:11px;padding:6px 8px;display:none}
+#tbl.on{display:block}
+#tbl table{border-collapse:collapse}
+#tbl th,#tbl td{border-bottom:1px solid var(--bd);padding:2px 6px;text-align:left;white-space:nowrap}
+#tbl td:nth-child(n+3),#tbl th:nth-child(n+3){text-align:right}
+#tbl td:first-child,#tbl th:first-child{text-align:right;opacity:.7}
+@media(max-width:560px){#tbl{max-width:82vw;max-height:46vh}#tbl td:nth-child(4),#tbl th:nth-child(4){display:none}#tbl td:nth-child(2){white-space:normal}}
 </style></head><body>
 <canvas id="c"></canvas>
 <div class="pn" id="top"><h1>Kawasan Madaya Sinjai — Denah 3D</h1>
-<button id="b1">Tampak atas</button><button id="b2">Isometrik</button><button id="b3">Label: ON</button><button id="b4">Denah 2D: ON</button>
-<div style="font-size:11px;opacity:.7;margin-top:6px">Geser = putar · scroll/cubit = zoom · klik bangunan = info</div></div>
+<button id="b1">Tampak atas</button><button id="b2">Isometrik</button><button id="b3">Label: ON</button><button id="b4">Peta dasar: ON</button><button id="b5">Mode: 3D</button><button id="b6">Tabel ukuran</button>
+<div style="font-size:11px;opacity:.7;margin-top:6px">3D: geser = putar · scroll/cubit = zoom · klik bangunan = info<br>Denah 2D: geser = geser peta · zoom untuk melihat ukuran area kecil</div></div>
 <div class="pn" id="info">Klik sebuah bangunan</div>
 <div class="pn" id="lg"></div>
+<div class="pn" id="tbl"></div>
+<div id="d2"></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -83,12 +104,14 @@ function deco(n,X,Z,W,D,ht,m){
   bx(g,W*.7,1.6,.1,0xb86b2a,0,1.7,D/2+.05);bx(g,W*.62,1.4,.12,0x7fa8b8,0,1.7,D/2+.07);
  }else if(n=='Cafe'||n=='Samping Cafe'){ // sesuai foto: dinding putih, atap seng datar + balok kayu tebal, teras depan (menghadap taman) tiang hitam, jendela kayu
   const q=new THREE.Group();q.rotation.y=Math.PI;g.add(q);
-  const wh=ht-.9,Wr=W+1,Dr=D+2.7,cz=.85,wd=0x5a3a22,wo=0xc98a4a;
+  const atap=n!='Samping Cafe',wh=atap?ht-.9:ht,Wr=W+1,Dr=D+2.7,cz=.85,wd=0x5a3a22,wo=0xc98a4a;
   bx(q,W,wh,D,0xf4f0e6,0,wh/2,0);
-  bx(q,Wr,.18,Dr,0x9aa3a5,0,wh+.45,cz);
-  for(let x=-Wr/2+.25;x<Wr/2;x+=.5)bx(q,.07,.07,Dr,0xd2d8d9,x,wh+.56,cz);
-  bx(q,Wr,.3,.25,wd,0,wh+.28,cz+Dr/2);bx(q,.25,.3,Dr,wd,Wr/2,wh+.28,cz);bx(q,.25,.3,Dr,wd,-Wr/2,wh+.28,cz);
-  for(const x of[-W/2+.4,W/2-.4])bx(q,.28,wh+.36,.28,0x1a1a1a,x,(wh+.36)/2,D/2+1.8);
+  if(atap){
+   bx(q,Wr,.18,Dr,0x9aa3a5,0,wh+.45,cz);
+   for(let x=-Wr/2+.25;x<Wr/2;x+=.5)bx(q,.07,.07,Dr,0xd2d8d9,x,wh+.56,cz);
+   bx(q,Wr,.3,.25,wd,0,wh+.28,cz+Dr/2);bx(q,.25,.3,Dr,wd,Wr/2,wh+.28,cz);bx(q,.25,.3,Dr,wd,-Wr/2,wh+.28,cz);
+   for(const x of[-W/2+.4,W/2-.4])bx(q,.28,wh+.36,.28,0x1a1a1a,x,(wh+.36)/2,D/2+1.8);
+  }else bx(q,W,.2,D,0xcfc6b0,0,wh+.1,0); // tanpa atap: hanya ring balok tepi dinding
   bx(q,W+1,.12,2.2,0xcfc6b0,0,.06,D/2+1.1);
   bx(q,W*.55,1.4,.1,wo,-W*.15,1.5,D/2+.05);bx(q,W*.5,1.2,.12,0xf1efe4,-W*.15,1.5,D/2+.07);
   bx(q,.9,2,.1,wo,W*.33,1,D/2+.05);
@@ -150,8 +173,61 @@ const rc=new THREE.Raycaster(),mv=new THREE.Vector2();let dn=null;
 cv.addEventListener('pointerdown',e=>dn=[e.clientX,e.clientY]);
 cv.addEventListener('pointerup',e=>{if(!dn||Math.hypot(e.clientX-dn[0],e.clientY-dn[1])>5)return;
  mv.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);rc.setFromCamera(mv,cam);
- const h=rc.intersectObjects(meshes)[0];if(h){const u=h.object.userData;info.innerHTML=`<b>${u.n}</b><br>${C[u.cat][0]}<br>Ukuran ± ${u.w} × ${u.d} m<br>Luas ± ${(u.w*u.d).toFixed(0)} m²<br>Tinggi model ${u.ht} m`}});
-function rs(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+ const h=rc.intersectObjects(meshes)[0];if(h)pick(h.object.userData)});
+function pick(u){info.innerHTML=`<b>${u.n}</b><br>${C[u.cat][0]}<br>Ukuran ± ${u.w} × ${u.d} m<br>Luas ± ${(u.w*u.d).toFixed(0)} m²<br>Tinggi model ${u.ht} m`}
+// ===== Denah 2D: gambar skalatis murni (garis + ukuran), tanpa objek 3D =====
+const NS='http://www.w3.org/2000/svg',el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+const d2=document.getElementById('d2'),svg=el('svg',{viewBox:`-9 -9 ${W+18} ${H+18}`,preserveAspectRatio:'xMidYMid meet'}),vp=el('g',{});svg.appendChild(vp);d2.appendChild(svg);
+vp.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'none',stroke:'#2b332c','stroke-width':.3,'vector-effect':'non-scaling-stroke'}));
+for(let x=5;x<W;x+=5)vp.appendChild(el('line',{x1:x,y1:0,x2:x,y2:H,class:'gd'}));
+for(let y=5;y<H;y+=5)vp.appendChild(el('line',{x1:0,y1:y,x2:W,y2:y,class:'gd'}));
+// garis ukuran keseluruhan kawasan
+function dim(x1,y1,x2,y2,t,ty){vp.appendChild(el('line',{x1,y1,x2,y2,class:'dim'}));
+ for(const[px,py]of[[x1,y1],[x2,y2]])vp.appendChild(el('line',{x1:px-(y1==y2?0:1.2),y1:py-(y1==y2?1.2:0),x2:px+(y1==y2?0:1.2),y2:py+(y1==y2?1.2:0),class:'dim'}));
+ const tt=el('text',{x:(x1+x2)/2,y:(y1+y2)/2+(ty||0),class:'dimt','font-size':3.2});tt.textContent=t;
+ if(x1==x2)tt.setAttribute('transform',`rotate(-90 ${x1} ${(y1+y2)/2})`);vp.appendChild(tt)}
+dim(0,-5,W,-5,`${W} m`,-2.2);dim(-5,0,-5,H,`${H} m`,-2.2);
+// setiap area: kotak berskala + nama + ukuran (p x l) dalam meter
+// Label ukuran dibuat berukuran tetap di layar: saat di-zoom, area terkecil pun ikut terbaca.
+const L2=[];
+D.forEach(([n,x,y,w,h,ht,cat],i)=>{
+ const X=sn(x),Y=sn(y),w_=sn(w),h_=sn(h),cx=X+w_/2,cy=Y+h_/2,uk=`${w_} × ${h_} m`;
+ const r=el('rect',{x:X,y:Y,width:w_,height:h_,fill:C[cat][1],'fill-opacity':.42,class:'ar'});
+ r.addEventListener('click',()=>pick({n,w:w_,d:h_,ht,cat}));vp.appendChild(r);
+ const t1=el('text',{x:cx,y:cy}),t2=el('text',{x:cx,y:cy,opacity:.85}),t3=el('text',{x:cx,y:cy,class:'no'});
+ t1.textContent=n;t2.textContent=uk;t3.textContent=i+1;
+ vp.appendChild(t1);vp.appendChild(t2);vp.appendChild(t3);
+ L2.push({t1,t2,t3,cy,w:w_,h:h_,cn:Math.max(n.length,uk.length)})});
+// pan + zoom pada denah 2D
+let z=1,px=0,py=0,dr=null;
+function fit(){ // px per meter pada layar
+ const k=svg.getBoundingClientRect().width/(W+18)*z;
+ for(const o of L2){const fp=Math.min(13,Math.max(9,o.h*k/4)),f=fp/k,need=o.cn*fp*.52;
+  const ok=o.w*k>need&&o.h*k>fp*2.6;
+  for(const[t,dy,sz]of[[o.t1,-fp*.62/k,f],[o.t2,fp*.66/k,f*.86]]){
+   t.setAttribute('font-size',sz);t.setAttribute('y',o.cy+dy);t.style.display=ok?'':'none'}
+  // area terlalu kecil untuk teks: diberi nomor, ukurannya ada di tabel
+  const np=Math.min(12,Math.max(8,Math.min(o.w,o.h)*k/2.2));
+  o.t3.setAttribute('font-size',np/k);o.t3.setAttribute('y',o.cy);
+  o.t3.style.display=!ok&&o.w*k>np*1.2&&o.h*k>np*1.2?'':'none'}}
+const ap=()=>{vp.setAttribute('transform',`translate(${px} ${py}) scale(${z})`);fit()};
+svg.addEventListener('wheel',e=>{e.preventDefault();const k=Math.exp(-e.deltaY*.0015),nz=Math.min(8,Math.max(.6,z*k));
+ const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const u=pt.matrixTransform(svg.getScreenCTM().inverse());
+ px=u.x-(u.x-px)*(nz/z);py=u.y-(u.y-py)*(nz/z);z=nz;ap()},{passive:false});
+svg.addEventListener('pointerdown',e=>{dr=[e.clientX,e.clientY,px,py];svg.classList.add('drag');svg.setPointerCapture(e.pointerId)});
+svg.addEventListener('pointermove',e=>{if(!dr)return;const sc_=svg.getBoundingClientRect().width/(W+18);
+ px=dr[2]+(e.clientX-dr[0])/sc_;py=dr[3]+(e.clientY-dr[1])/sc_;ap()});
+svg.addEventListener('pointerup',()=>{dr=null;svg.classList.remove('drag')});
+// tabel kolom nama / ukuran / luas
+const tbl=document.getElementById('tbl');
+tbl.innerHTML='<table><tr><th>No</th><th>Area</th><th>Ukuran m</th><th>m²</th></tr>'+D.map(([n,x,y,w,h],i)=>{
+ const w_=sn(w),h_=sn(h);return `<tr><td>${i+1}</td><td>${n}</td><td>${w_} × ${h_}</td><td>${(w_*h_).toFixed(0)}</td></tr>`}).join('')+
+ `<tr><th></th><th>Total kawasan</th><th>${W} × ${H}</th><th>${(W*H).toFixed(0)}</th></tr></table>`;
+b6.onclick=()=>tbl.classList.toggle('on');
+let m2=false;b5.onclick=()=>{m2=!m2;d2.classList.toggle('on',m2);if(m2)fit();
+ for(const id of['b1','b2','b3','b4'])document.getElementById(id).disabled=m2;
+ b5.textContent='Mode: '+(m2?'Denah 2D':'3D');document.querySelector('#top h1').textContent='Kawasan Madaya Sinjai — '+(m2?'Denah 2D & Ukuran':'Denah 3D')};
+function rs(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();fit()}
 addEventListener('resize',rs);rs();
 (function a(){requestAnimationFrame(a);ctl.update();R.render(sc,cam)})();
 </script></body></html>
